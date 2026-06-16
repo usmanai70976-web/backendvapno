@@ -4,17 +4,7 @@ Handles automatic peer registration and cleanup
 """
 import os
 import tempfile
-
-# In the __init__ method, add:
-if not self.ssh_key_path:
-    # Create temp file from environment variable
-    private_key = os.environ.get("WIREGUARD_SSH_PRIVATE_KEY")
-    if private_key:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.key') as f:
-            f.write(private_key)
-            self.ssh_key_path = f.name
 import paramiko
-import os
 from datetime import datetime
 import logging
 
@@ -31,6 +21,15 @@ class WireGuardManager:
         self.username = username
         self.ssh_key_path = ssh_key_path or os.environ.get("WIREGUARD_SSH_KEY_PATH")
         
+        # ✅ Fixed: The environment variable temporary key logic belongs inside __init__
+        if not self.ssh_key_path:
+            # Create temp file from environment variable
+            private_key = os.environ.get("WIREGUARD_SSH_PRIVATE_KEY")
+            if private_key:
+                with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.key') as f:
+                    f.write(private_key)
+                    self.ssh_key_path = f.name
+
     def _execute_ssh_command(self, command: str) -> str:
         """
         Execute command on remote server via SSH
